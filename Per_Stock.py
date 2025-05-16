@@ -1,7 +1,10 @@
+import streamlit as st
 import yfinance as yf
-from tabulate import tabulate
 
-# Define the criteria from your table
+# --- Set page config
+st.set_page_config(page_title="Stock Classification", layout="wide")
+
+# --- Define criteria logic
 criteria = {
     "PE": {"Deep Value": lambda x: x < 8, "Value": lambda x: x < 20},
     "PB": {"Deep Value": lambda x: x < 1},
@@ -23,12 +26,14 @@ criteria = {
     "Insider Buying": {"Deep Value": lambda x: x is True}
 }
 
-# Fetch financials
+# --- Fetch data
 def fetch_data(ticker):
     stock = yf.Ticker(ticker)
-    info = stock.info
+    try:
+        info = stock.info
+    except Exception:
+        return None
 
-    # Example mock/placeholder values for some unavailable fields
     data = {
         "PE": info.get("trailingPE", 0),
         "PB": info.get("priceToBook", 0),
@@ -49,37 +54,42 @@ def fetch_data(ticker):
         "Cashflow 5 Years": True,  # Placeholder
         "Insider Buying": False  # Placeholder
     }
-
     return data
 
-# Evaluate each metric
+# --- Evaluate
 def evaluate(data):
-    table = []
+    result = []
     match_counts = {"Deep Value": 0, "Value": 0, "Growth": 0}
 
-    for metric, values in data.items():
-        row = [metric, f"{values:.2f}" if isinstance(values, (float, int)) else str(values)]
+    for metric, value in data.items():
+        row = {"Metric": metric, "Value": round(value, 2) if isinstance(value, (float, int)) else value}
         for category in ["Deep Value", "Value", "Growth"]:
             rule = criteria.get(metric, {}).get(category)
-            if rule and rule(values):
-                row.append("✅")
+            if rule and rule(value):
+                row[category] = "✅"
                 match_counts[category] += 1
             else:
-                row.append("")
-        table.append(row)
+                row[category] = ""
+        result.append(row)
+    return result, match_counts
 
-    return table, match_counts
+# --- Streamlit UI
+st.title("📊 Stock Classification: Deep Value vs Growth vs Value")
 
-# Main
-if __name__ == "__main__":
-    ticker = input("Enter stock ticker: ").upper()
-    data = fetch_data(ticker)
-    table, counts = evaluate(data)
+ticker = st.text_input("Enter a stock ticker (e.g., AAPL, MSFT):")
 
-    headers = ["Metric", "Value", "Deep Value", "Value", "Growth"]
-    print(f"\n📊 Analysis for {ticker}\n")
-    print(tabulate(table, headers=headers, tablefmt="grid"))
+if ticker:
+    with st.spinner("Fetching data..."):
+        data = fetch_data(ticker)
 
-    # Classification logic
-    classification = max(counts, key=counts.get)
-    print(f"\n📌 Classification: {ticker} is classified as **{classification}** (matches: {counts})")
+    if data is None:
+        st.error("Failed to fetch data. Please check the ticker or try again later.")
+    else:
+        results, counts = evaluate(data)
+        st.subheader(f"📈 Analysis for `{ticker.upper()}`")
+        st.dataframe(results, use_container_width=True)
+
+        best_fit = max(counts, key=counts.get)
+        st.success(f"🔎 **Classification:** {ticker.upper()} is a **{best_fit}** stock (matches: {counts})")
+else:
+    st.info("Please enter a stock ticker above to start the analysis.")
