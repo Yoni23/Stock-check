@@ -69,7 +69,7 @@ def evaluate(data):
                 row[category] = "✅"
                 match_counts[category] += 1
             else:
-                row[category] = ""
+                row[category] = ":X:"
         result.append(row)
     return result, match_counts
 
