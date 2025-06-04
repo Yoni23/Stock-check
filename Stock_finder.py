@@ -1,33 +1,6 @@
 import streamlit as st
 import yfinance as yf
-def main():
-    
-# --- Set page config
-st.set_page_config(page_title="Stock Classification", layout="wide")
 
-# --- Define criteria logic
-criteria = {
-    "PE": {"Deep Value": lambda x: x < 8, "Value": lambda x: x < 20},
-    "PB": {"Deep Value": lambda x: x < 1},
-    "Debt/Equity": {"Deep Value": lambda x: x < 0.5, "Value": lambda x: x < 0.5, "Growth": lambda x: x < 0.5},
-    "Free Cashflow yield": {"Deep Value": lambda x: x > 8},
-    "Current ratio": {"Deep Value": lambda x: x > 1.5},
-    "P/S": {"Deep Value": lambda x: x < 1},
-    "ROE": {"Value": lambda x: x > 15},
-    "ROIC": {"Value": lambda x: x > 12},
-    "Earning Growth": {"Value": lambda x: 5 <= x <= 10},
-    "Revenue Growth YOY": {"Growth": lambda x: x > 20},
-    "EPS Growth YOY": {"Growth": lambda x: x > 20},
-    "Gross margin": {"Growth": lambda x: x > 60},
-    "Revenue Growth + Cash flow Margin": {"Growth": lambda x: x > 40},
-    "TAM": {"Growth": lambda x: x > 10_000_000_000},
-    "Retention Rate": {"Growth": lambda x: x > 110},
-    "Moat": {"Growth": lambda x: x is True},
-    "Cashflow 5 Years": {"Growth": lambda x: x is True},
-    "Insider Buying": {"Deep Value": lambda x: x is True}
-}
-
-# --- Fetch data
 def fetch_data(ticker):
     stock = yf.Ticker(ticker)
     try:
@@ -57,8 +30,28 @@ def fetch_data(ticker):
     }
     return data
 
-# --- Evaluate
 def evaluate(data):
+    criteria = {
+        "PE": {"Deep Value": lambda x: x < 8, "Value": lambda x: x < 20},
+        "PB": {"Deep Value": lambda x: x < 1},
+        "Debt/Equity": {"Deep Value": lambda x: x < 0.5, "Value": lambda x: x < 0.5, "Growth": lambda x: x < 0.5},
+        "Free Cashflow yield": {"Deep Value": lambda x: x > 8},
+        "Current ratio": {"Deep Value": lambda x: x > 1.5},
+        "P/S": {"Deep Value": lambda x: x < 1},
+        "ROE": {"Value": lambda x: x > 15},
+        "ROIC": {"Value": lambda x: x > 12},
+        "Earning Growth": {"Value": lambda x: 5 <= x <= 10},
+        "Revenue Growth YOY": {"Growth": lambda x: x > 20},
+        "EPS Growth YOY": {"Growth": lambda x: x > 20},
+        "Gross margin": {"Growth": lambda x: x > 60},
+        "Revenue Growth + Cash flow Margin": {"Growth": lambda x: x > 40},
+        "TAM": {"Growth": lambda x: x > 10_000_000_000},
+        "Retention Rate": {"Growth": lambda x: x > 110},
+        "Moat": {"Growth": lambda x: x is True},
+        "Cashflow 5 Years": {"Growth": lambda x: x is True},
+        "Insider Buying": {"Deep Value": lambda x: x is True}
+    }
+
     result = []
     for metric, value in data.items():
         row = {"Metric": metric, "Value": round(value, 2) if isinstance(value, (float, int)) else value}
@@ -74,7 +67,23 @@ def evaluate(data):
         result.append(row)
     return result
 
-# --- Stream
+def main():
+    # --- Set page config
+    st.set_page_config(page_title="Stock Classification", layout="wide")
+    
+    st.title("📊 Stock Classification: Deep Value vs Growth vs Value")
+    
+    # --- Input for ticker symbol
+    ticker = st.text_input("Enter stock ticker symbol:", value="AAPL")
+    
+    if ticker:
+        data = fetch_data(ticker)
+        if data:
+            results = evaluate(data)
+            st.write(f"### Evaluation for {ticker}")
+            st.table(results)
+        else:
+            st.write("Failed to fetch data. Please check the ticker symbol.")
 
 if __name__ == "__main__":
     main()
