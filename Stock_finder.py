@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
-
+def main():
+    
 # --- Set page config
 st.set_page_config(page_title="Stock Classification", layout="wide")
 
@@ -74,3 +75,6 @@ def evaluate(data):
     return result
 
 # --- Stream
+
+if __name__ == "__main__":
+    main()
