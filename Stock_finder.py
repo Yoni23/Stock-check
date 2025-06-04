@@ -65,25 +65,12 @@ def evaluate(data):
             rule = criteria.get(metric, {}).get(category)
             if rule:
                 if rule(value):
-                    row[category] = "✔️"  # Check mark icon
+                    row[category] = "✔️"
                 else:
-                    row[category] = "❌"  # Cross mark icon
+                    row[category] = "❌"
             else:
-                row[category] = ""  # Leave blank if not applicable
+                row[category] = ""
         result.append(row)
     return result
 
-# --- Streamlit UI
-st.title("📊 Stock Classification: Deep Value vs Growth vs Value")
-
-# Input ticker
-ticker = st.text_input("Enter stock ticker symbol:", value="AAPL")
-
-if ticker:
-    data = fetch_data(ticker)
-    if data:
-        results = evaluate(data)
-        # Display results in a table
-        st.write(f"### Evaluation for {ticker}")
-        st.table(results)
-    else:
+# --- Stream
